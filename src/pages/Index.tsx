@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
-import { RegistrationForm } from '@/components/RegistrationForm';
+import { Dashboard } from '@/components/Dashboard';
+import { RegistrationModal } from '@/components/RegistrationModal';
 import { RegistrationSummary } from '@/components/RegistrationSummary';
 import { AdminPanel } from '@/components/AdminPanel';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { exportToExcel } from '@/utils/exportUtils';
 import { toast } from '@/hooks/use-toast';
-import { Users, Settings, Heart } from 'lucide-react';
+import { Users, Settings } from 'lucide-react';
 
 interface RegistrationData {
   fullName: string;
@@ -15,26 +16,29 @@ interface RegistrationData {
   roomNumber: string;
   groupName: string;
   interests: string[];
+  customInterest: string;
   software: string[];
+  customSoftware: string;
 }
 
 const Index = () => {
   const [currentRegistration, setCurrentRegistration] = useState<RegistrationData | null>(null);
   const [allRegistrations, setAllRegistrations] = useState<RegistrationData[]>([]);
   const [showSummary, setShowSummary] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleStartRegistration = () => {
+    setIsModalOpen(true);
+  };
 
   const handleRegistrationSubmit = (data: RegistrationData) => {
     setCurrentRegistration(data);
     setAllRegistrations(prev => [...prev, data]);
     setShowSummary(true);
+    setIsModalOpen(false);
   };
 
   const handleNewRegistration = () => {
-    setCurrentRegistration(null);
-    setShowSummary(false);
-  };
-
-  const handleReset = () => {
     setCurrentRegistration(null);
     setShowSummary(false);
   };
@@ -62,26 +66,18 @@ const Index = () => {
     setShowSummary(false);
   };
 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Heart className="h-12 w-12 text-purple-600 mr-3" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Creative Community Hub
-            </h1>
-          </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join our vibrant community of creative minds and showcase your artistic talents!
-          </p>
-        </div>
-
-        <Tabs defaultValue="register" className="w-full">
+        <Tabs defaultValue="dashboard" className="w-full">
           <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-8">
-            <TabsTrigger value="register" className="flex items-center gap-2">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Register
+              Dashboard
             </TabsTrigger>
             <TabsTrigger value="admin" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -89,11 +85,11 @@ const Index = () => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="register" className="space-y-6">
+          <TabsContent value="dashboard" className="space-y-6">
             {!showSummary ? (
-              <RegistrationForm 
-                onSubmit={handleRegistrationSubmit}
-                onReset={handleReset}
+              <Dashboard 
+                onStartRegistration={handleStartRegistration}
+                totalRegistrations={allRegistrations.length}
               />
             ) : (
               currentRegistration && (
@@ -114,6 +110,13 @@ const Index = () => {
             />
           </TabsContent>
         </Tabs>
+
+        {/* Registration Modal */}
+        <RegistrationModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSubmit={handleRegistrationSubmit}
+        />
 
         {allRegistrations.length > 0 && !showSummary && (
           <div className="fixed bottom-6 right-6">
