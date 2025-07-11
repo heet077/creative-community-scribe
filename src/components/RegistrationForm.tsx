@@ -23,6 +23,15 @@ interface RegistrationData {
   customSoftware: string;
 }
 
+interface ValidationErrors {
+  fullName?: string;
+  mobileNumber?: string;
+  roomNumber?: string;
+  groupName?: string;
+  interests?: string;
+  software?: string;
+}
+
 interface RegistrationFormProps {
   onClose: () => void;
   onSuccess?: () => void;
@@ -70,9 +79,37 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onClose, onS
     software: [],
     customSoftware: ''
   });
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [isCheckingMobile, setIsCheckingMobile] = useState(false);
+
+  // Validation functions
+  const validateFullName = (name: string): string | undefined => {
+    if (!name.trim()) return "Full name is required";
+    if (name.trim().length < 2) return "Name must be at least 2 characters long";
+    if (!/^[a-zA-Z\s]+$/.test(name.trim())) return "Name should only contain letters and spaces";
+    return undefined;
+  };
+
+  const validateMobileNumber = (number: string): string | undefined => {
+    if (!number.trim()) return "Mobile number is required";
+    if (!/^[6-9]\d{9}$/.test(number.trim())) {
+      return "Please enter a valid 10-digit Indian mobile number";
+    }
+    return undefined;
+  };
+
+  const validateRoomNumber = (room: string): string | undefined => {
+    if (!room.trim()) return "Room number is required";
+    if (!/^[A-Za-z0-9-]+$/.test(room.trim())) {
+      return "Room number should only contain letters, numbers, and hyphens";
+    }
+    return undefined;
+  };
 
   const handleInputChange = (field: keyof RegistrationData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear validation error when user starts typing
+    setValidationErrors(prev => ({ ...prev, [field]: undefined }));
   };
 
   const handleMultiSelect = (field: 'interests' | 'software', value: string, checked: boolean) => {
@@ -84,40 +121,91 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onClose, onS
     }));
   };
 
-  const validateCurrentStep = () => {
+  const validateCurrentStep = async () => {
     const currentFields = steps[currentStep].fields;
-    
+    let errors: ValidationErrors = {};
+    let isValid = true;
+
     for (const field of currentFields) {
-      if (field === 'fullName' && !formData.fullName.trim()) {
-        toast({ title: "Please enter your full name", variant: "destructive" });
-        return false;
+      if (field === 'fullName') {
+        const error = validateFullName(formData.fullName);
+        if (error) {
+          errors.fullName = error;
+          isValid = false;
+        }
       }
-      if (field === 'mobileNumber' && !formData.mobileNumber.trim()) {
-        toast({ title: "Please enter your mobile number", variant: "destructive" });
-        return false;
+
+      if (field === 'mobileNumber') {
+        const error = validateMobileNumber(formData.mobileNumber);
+        if (error) {
+          errors.mobileNumber = error;
+          isValid = false;
+        } else {
+          // Check for uniqueness only if format is valid
+          setIsCheckingMobile(true);
+          try {
+            const exists = await registrationService.checkMobileNumberExists(formData.mobileNumber);
+            if (exists) {
+              errors.mobileNumber = "This mobile number is already registered";
+              isValid = false;
+            }
+          } catch (error) {
+            console.error('Error checking mobile number:', error);
+            toast({ 
+              title: "Error checking mobile number",
+              description: "Please try again",
+              variant: "destructive"
+            });
+            isValid = false;
+          } finally {
+            setIsCheckingMobile(false);
+          }
+        }
       }
-      if (field === 'roomNumber' && !formData.roomNumber.trim()) {
-        toast({ title: "Please enter your room number", variant: "destructive" });
-        return false;
+
+      if (field === 'roomNumber') {
+        const error = validateRoomNumber(formData.roomNumber);
+        if (error) {
+          errors.roomNumber = error;
+          isValid = false;
+        }
       }
+
       if (field === 'groupName' && !formData.groupName.trim()) {
-        toast({ title: "Please select your group name", variant: "destructive" });
-        return false;
+        errors.groupName = "Please select your group";
+        isValid = false;
       }
+
       if (field === 'interests' && formData.interests.length === 0 && !formData.customInterest.trim()) {
-        toast({ title: "Please select at least one creative interest or specify other", variant: "destructive" });
-        return false;
+        errors.interests = "Please select at least one creative interest or specify other";
+        isValid = false;
       }
+
       if (field === 'software' && formData.software.length === 0 && !formData.customSoftware.trim()) {
-        toast({ title: "Please select at least one software/application or specify other", variant: "destructive" });
-        return false;
+        errors.software = "Please select at least one software/application or specify other";
+        isValid = false;
       }
     }
+
+    setValidationErrors(errors);
+
+    if (!isValid) {
+      const firstError = Object.values(errors)[0];
+      if (firstError) {
+        toast({ 
+          title: firstError,
+          variant: "destructive"
+        });
+      }
+      return false;
+    }
+
     return true;
   };
 
-  const handleNext = () => {
-    if (validateCurrentStep()) {
+  const handleNext = async () => {
+    const isValid = await validateCurrentStep();
+    if (isValid) {
       if (currentStep < steps.length - 1) {
         setCurrentStep(currentStep + 1);
       } else {
@@ -296,8 +384,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onClose, onS
                 placeholder="Enter your full name"
                 value={formData.fullName}
                 onChange={(e) => handleInputChange('fullName', e.target.value)}
-                className="mt-1.5 h-10 md:h-11 text-base"
+                className={`mt-1.5 h-10 md:h-11 text-base ${validationErrors.fullName ? 'border-red-500' : ''}`}
               />
+              {validationErrors.fullName && (
+                <p className="text-xs text-red-500 mt-1">{validationErrors.fullName}</p>
+              )}
             </div>
           </div>
         );
@@ -316,11 +407,18 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onClose, onS
               <Input
                 id="mobileNumber"
                 type="tel"
-                placeholder="+91-XXXXXXXXXX"
+                placeholder="10-digit mobile number"
                 value={formData.mobileNumber}
                 onChange={(e) => handleInputChange('mobileNumber', e.target.value)}
-                className="mt-1.5 h-10 md:h-11 text-base"
+                className={`mt-1.5 h-10 md:h-11 text-base ${validationErrors.mobileNumber ? 'border-red-500' : ''}`}
+                disabled={isCheckingMobile}
               />
+              {validationErrors.mobileNumber && (
+                <p className="text-xs text-red-500 mt-1">{validationErrors.mobileNumber}</p>
+              )}
+              {isCheckingMobile && (
+                <p className="text-xs text-blue-500 mt-1">Checking mobile number...</p>
+              )}
             </div>
           </div>
         );
@@ -342,8 +440,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onClose, onS
                 placeholder="Enter your room number"
                 value={formData.roomNumber}
                 onChange={(e) => handleInputChange('roomNumber', e.target.value)}
-                className="mt-1.5 h-10 md:h-11 text-base"
+                className={`mt-1.5 h-10 md:h-11 text-base ${validationErrors.roomNumber ? 'border-red-500' : ''}`}
               />
+              {validationErrors.roomNumber && (
+                <p className="text-xs text-red-500 mt-1">{validationErrors.roomNumber}</p>
+              )}
             </div>
           </div>
         );

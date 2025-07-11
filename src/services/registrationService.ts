@@ -169,5 +169,25 @@ export const registrationService = {
       console.error('Error getting registrations by group:', error);
       throw error;
     }
+  },
+
+  async checkMobileNumberExists(mobileNumber: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('registrations')
+        .select('mobile_number')
+        .eq('mobile_number', mobileNumber)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // PGRST116 means no rows returned - number doesn't exist
+        return false;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error('Error checking mobile number:', error);
+      throw error;
+    }
   }
 }; 
