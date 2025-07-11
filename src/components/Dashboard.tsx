@@ -1,15 +1,26 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Palette, Heart, Star, Trophy, Sparkles, Zap, Rocket, Crown } from 'lucide-react';
+import { Users, Palette, Star, Trophy, Sparkles, Zap, Rocket, Crown } from 'lucide-react';
+import { registrationService } from '@/services/registrationService';
 
 interface DashboardProps {
   onStartRegistration: () => void;
-  totalRegistrations: number;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onStartRegistration, totalRegistrations }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onStartRegistration }) => {
+  const [totalRegistrations, setTotalRegistrations] = useState(0);
+
+  useEffect(() => {
+    const fetchTotalRegistrations = async () => {
+      const count = await registrationService.getTotalRegistrations();
+      setTotalRegistrations(count);
+    };
+
+    fetchTotalRegistrations();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
       <div className="max-w-6xl mx-auto space-y-12">
@@ -33,36 +44,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartRegistration, total
         </div>
 
         {/* Creative Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto">
+          <Card className="col-span-1 border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
             <CardHeader className="text-center pb-2">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-90" />
-              <CardTitle className="text-3xl font-bold">{totalRegistrations}</CardTitle>
-              <CardDescription className="text-purple-100">Active Creators</CardDescription>
+              <Users className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-2 md:mb-4 opacity-90" />
+              <CardTitle className="text-2xl md:text-3xl font-bold">{totalRegistrations}</CardTitle>
+              <CardDescription className="text-purple-100 text-sm md:text-base">Active Creators</CardDescription>
             </CardHeader>
           </Card>
 
-          <Card className="border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+          <Card className="col-span-1 border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
             <CardHeader className="text-center pb-2">
-              <Trophy className="h-12 w-12 mx-auto mb-4 opacity-90" />
-              <CardTitle className="text-3xl font-bold">4</CardTitle>
-              <CardDescription className="text-blue-100">Creative Teams</CardDescription>
+              <Trophy className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-2 md:mb-4 opacity-90" />
+              <CardTitle className="text-2xl md:text-3xl font-bold">4</CardTitle>
+              <CardDescription className="text-blue-100 text-sm md:text-base">Creative Teams</CardDescription>
             </CardHeader>
           </Card>
 
-          <Card className="border-0 bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+          <Card className="col-span-2 md:col-span-1 border-0 bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
             <CardHeader className="text-center pb-2">
-              <Star className="h-12 w-12 mx-auto mb-4 opacity-90" />
-              <CardTitle className="text-3xl font-bold">8+</CardTitle>
-              <CardDescription className="text-green-100">Skills Available</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-0 bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-            <CardHeader className="text-center pb-2">
-              <Rocket className="h-12 w-12 mx-auto mb-4 opacity-90" />
-              <CardTitle className="text-3xl font-bold">∞</CardTitle>
-              <CardDescription className="text-pink-100">Possibilities</CardDescription>
+              <Star className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-2 md:mb-4 opacity-90" />
+              <CardTitle className="text-2xl md:text-3xl font-bold">8+</CardTitle>
+              <CardDescription className="text-green-100 text-sm md:text-base">Skills Available</CardDescription>
             </CardHeader>
           </Card>
         </div>
@@ -91,14 +94,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartRegistration, total
               <Button 
                 onClick={onStartRegistration}
                 size="lg"
-                className="text-xl px-12 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 rounded-full"
+                className="w-[85%] max-w-[280px] text-base md:text-xl px-6 md:px-12 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 rounded-full"
               >
-                <Sparkles className="h-6 w-6 mr-3" />
-                Start Your Creative Journey
-                <Heart className="h-6 w-6 ml-3" />
+                <Sparkles className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
+                <span className="whitespace-nowrap">Start Your Creative Journey</span>
               </Button>
               
-              <p className="text-muted-foreground mt-6 text-lg">
+              <p className="text-muted-foreground mt-6 text-sm md:text-lg">
                 ✨ Quick & Easy • 🚀 2 Minutes • 💫 Join {totalRegistrations} Creators
               </p>
             </CardContent>
@@ -106,7 +108,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartRegistration, total
         </div>
 
         {/* Creative Features */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <Card className="border-0 bg-gradient-to-br from-orange-50 to-red-50 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardHeader>
               <CardTitle className="flex items-center text-2xl">

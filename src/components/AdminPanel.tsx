@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area } from 'recharts';
-import { Users, Download, Trash2, TrendingUp, Award, Palette, Camera, Edit, Code, Brush, User, Phone, Home, UserCheck, Star, Trophy, Zap, Target } from 'lucide-react';
+import { Users, Download, Trash2, TrendingUp, Award, Palette, Camera, Edit, Code, Brush, User, Phone, Home, UserCheck, Star, Trophy, Zap, Target, Loader2 } from 'lucide-react';
 
 interface RegistrationData {
+  id: string;
   fullName: string;
   mobileNumber: string;
   roomNumber: string;
@@ -19,6 +20,8 @@ interface AdminPanelProps {
   registrations: RegistrationData[];
   onExportData: () => void;
   onClearData: () => void;
+  onDeleteRegistration: (id: string) => void;
+  isLoading: boolean;
 }
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
@@ -26,8 +29,21 @@ const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
 export const AdminPanel: React.FC<AdminPanelProps> = ({ 
   registrations, 
   onExportData, 
-  onClearData 
+  onClearData,
+  onDeleteRegistration,
+  isLoading
 }) => {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto" />
+          <p className="text-lg text-muted-foreground">Loading registrations...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Data processing for charts
   const groupData = registrations.reduce((acc: any, reg) => {
     acc[reg.groupName] = (acc[reg.groupName] || 0) + 1;
@@ -312,6 +328,81 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* All Registrations Table */}
+        {registrations.length > 0 && (
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <Users className="h-6 w-6 mr-2 text-indigo-600" />
+                All Registrations
+              </CardTitle>
+              <CardDescription>Complete registration data</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-gray-50 to-blue-50 text-left">
+                      <th className="p-4 border-b font-semibold text-gray-600">#</th>
+                      <th className="p-4 border-b font-semibold text-gray-600">Full Name</th>
+                      <th className="p-4 border-b font-semibold text-gray-600">Mobile Number</th>
+                      <th className="p-4 border-b font-semibold text-gray-600">Room Number</th>
+                      <th className="p-4 border-b font-semibold text-gray-600">Group Name</th>
+                      <th className="p-4 border-b font-semibold text-gray-600">Interests</th>
+                      <th className="p-4 border-b font-semibold text-gray-600">Software</th>
+                      <th className="p-4 border-b font-semibold text-gray-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {registrations.map((registration, index) => (
+                      <tr key={registration.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="p-4 border-b">{index + 1}</td>
+                        <td className="p-4 border-b font-medium">{registration.fullName}</td>
+                        <td className="p-4 border-b">{registration.mobileNumber}</td>
+                        <td className="p-4 border-b">{registration.roomNumber}</td>
+                        <td className="p-4 border-b">
+                          <Badge variant="secondary">{registration.groupName}</Badge>
+                        </td>
+                        <td className="p-4 border-b">
+                          <div className="flex flex-wrap gap-1">
+                            {registration.interests.map((interest) => (
+                              <Badge key={interest} variant="outline" className="text-xs">
+                                {interest}
+                              </Badge>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="p-4 border-b">
+                          <div className="flex flex-wrap gap-1">
+                            {registration.software.map((sw) => (
+                              <Badge key={sw} variant="outline" className="text-xs bg-blue-50">
+                                {sw}
+                              </Badge>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="p-4 border-b">
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this registration?')) {
+                                onDeleteRegistration(registration.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </CardContent>
           </Card>
