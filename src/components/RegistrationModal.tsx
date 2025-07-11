@@ -28,7 +28,7 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogOverlay className="bg-black/50" />
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[95vh] overflow-y-auto p-0 m-4">
         <RegistrationForm onSubmit={onSubmit} onClose={onClose} />
       </DialogContent>
     </Dialog>

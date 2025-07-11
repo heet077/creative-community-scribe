@@ -3,8 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, Users, FileText, Trash2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area } from 'recharts';
+import { Users, Download, Trash2, TrendingUp, Award, Palette, Camera, Edit, Code, Brush, User, Phone, Home, UserCheck, Star, Trophy, Zap, Target } from 'lucide-react';
 
 interface RegistrationData {
   fullName: string;
@@ -21,103 +21,302 @@ interface AdminPanelProps {
   onClearData: () => void;
 }
 
+const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300'];
+
 export const AdminPanel: React.FC<AdminPanelProps> = ({ 
   registrations, 
   onExportData, 
   onClearData 
 }) => {
-  const handleClearData = () => {
-    if (window.confirm('Are you sure you want to clear all registration data? This action cannot be undone.')) {
-      onClearData();
-      toast({ title: "All registration data cleared successfully" });
-    }
-  };
+  // Data processing for charts
+  const groupData = registrations.reduce((acc: any, reg) => {
+    acc[reg.groupName] = (acc[reg.groupName] || 0) + 1;
+    return acc;
+  }, {});
+
+  const chartData = Object.entries(groupData).map(([name, value]) => ({
+    name,
+    value,
+    count: value
+  }));
+
+  const interestsData = registrations
+    .flatMap(reg => reg.interests)
+    .reduce((acc: any, interest) => {
+      acc[interest] = (acc[interest] || 0) + 1;
+      return acc;
+    }, {});
+
+  const interestsChartData = Object.entries(interestsData)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a: any, b: any) => b.value - a.value)
+    .slice(0, 8);
+
+  const softwareData = registrations
+    .flatMap(reg => reg.software)
+    .reduce((acc: any, software) => {
+      acc[software] = (acc[software] || 0) + 1;
+      return acc;
+    }, {});
+
+  const softwareChartData = Object.entries(softwareData)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a: any, b: any) => b.value - a.value)
+    .slice(0, 8);
+
+  // Mock data for trends (you can replace with real time-based data)
+  const trendData = [
+    { day: 'Mon', registrations: 12 },
+    { day: 'Tue', registrations: 19 },
+    { day: 'Wed', registrations: 8 },
+    { day: 'Thu', registrations: 15 },
+    { day: 'Fri', registrations: 22 },
+    { day: 'Sat', registrations: 18 },
+    { day: 'Sun', registrations: 14 },
+  ];
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <Users className="h-6 w-6 text-primary mr-2" />
-            <div>
-              <CardTitle>Admin Panel</CardTitle>
-              <CardDescription>Manage creative community registrations</CardDescription>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-blue-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header Section */}
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center mb-4">
+            <Trophy className="h-12 w-12 text-purple-600 mr-3" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-teal-600 bg-clip-text text-transparent">
+              Admin Dashboard
+            </h1>
+            <Zap className="h-12 w-12 text-yellow-500 ml-3 animate-pulse" />
           </div>
-          <div className="flex gap-2">
-            <Button onClick={onExportData} variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export ({registrations.length})
-            </Button>
-            <Button onClick={handleClearData} variant="destructive" size="sm">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Clear All
-            </Button>
-          </div>
+          <p className="text-lg text-muted-foreground">
+            Creative Community Analytics & Management ✨
+          </p>
         </div>
-      </CardHeader>
 
-      <CardContent>
-        {registrations.length === 0 ? (
-          <div className="text-center py-8">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No registrations yet</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {registrations.map((registration, index) => (
-              <Card key={index} className="border-l-4 border-l-primary">
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Name:</span>
-                        <p className="font-semibold">{registration.fullName}</p>
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <CardHeader className="text-center pb-2">
+              <Users className="h-12 w-12 mx-auto mb-4 opacity-90" />
+              <CardTitle className="text-3xl font-bold">{registrations.length}</CardTitle>
+              <CardDescription className="text-purple-100">Total Registrations</CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <CardHeader className="text-center pb-2">
+              <Award className="h-12 w-12 mx-auto mb-4 opacity-90" />
+              <CardTitle className="text-3xl font-bold">{Object.keys(groupData).length}</CardTitle>
+              <CardDescription className="text-blue-100">Active Groups</CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 bg-gradient-to-br from-green-500 to-green-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <CardHeader className="text-center pb-2">
+              <Star className="h-12 w-12 mx-auto mb-4 opacity-90" />
+              <CardTitle className="text-3xl font-bold">{Object.keys(interestsData).length}</CardTitle>
+              <CardDescription className="text-green-100">Unique Skills</CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-0 bg-gradient-to-br from-pink-500 to-pink-600 text-white shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
+            <CardHeader className="text-center pb-2">
+              <Target className="h-12 w-12 mx-auto mb-4 opacity-90" />
+              <CardTitle className="text-3xl font-bold">{Object.keys(softwareData).length}</CardTitle>
+              <CardDescription className="text-pink-100">Software Tools</CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Group Distribution Pie Chart */}
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <Users className="h-6 w-6 mr-2 text-purple-600" />
+                Group Distribution
+              </CardTitle>
+              <CardDescription>Registration distribution across creative teams</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Registration Trends */}
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <TrendingUp className="h-6 w-6 mr-2 text-green-600" />
+                Registration Trends
+              </CardTitle>
+              <CardDescription>Daily registration activity</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area 
+                    type="monotone" 
+                    dataKey="registrations" 
+                    stroke="#8884d8" 
+                    fill="url(#colorGradient)" 
+                  />
+                  <defs>
+                    <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Top Creative Interests */}
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <Palette className="h-6 w-6 mr-2 text-pink-600" />
+                Top Creative Interests
+              </CardTitle>
+              <CardDescription>Most popular creative skills</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={interestsChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#ff7300" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Software Usage */}
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <Code className="h-6 w-6 mr-2 text-blue-600" />
+                Software Usage
+              </CardTitle>
+              <CardDescription>Most used creative software</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={softwareChartData} layout="horizontal">
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={100} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#82ca9d" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Actions Section */}
+        <Card className="shadow-xl border-0 bg-gradient-to-r from-purple-50 to-blue-50">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl">
+              <Zap className="h-6 w-6 mr-2 text-purple-600" />
+              Admin Actions
+            </CardTitle>
+            <CardDescription>Manage your registration data</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-4">
+            <Button 
+              onClick={onExportData}
+              className="bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export to Excel
+            </Button>
+            <Button 
+              onClick={onClearData}
+              variant="destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear All Data
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Recent Registrations */}
+        {registrations.length > 0 && (
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center text-xl">
+                <UserCheck className="h-6 w-6 mr-2 text-green-600" />
+                Recent Registrations
+              </CardTitle>
+              <CardDescription>Latest members who joined the community</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {registrations.slice(-10).reverse().map((registration, index) => (
+                  <div key={index} className="p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-200">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="flex items-center">
+                        <User className="h-4 w-4 mr-2 text-blue-600" />
+                        <span className="font-medium">{registration.fullName}</span>
                       </div>
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Mobile:</span>
-                        <p>{registration.mobileNumber}</p>
+                      <div className="flex items-center">
+                        <Phone className="h-4 w-4 mr-2 text-green-600" />
+                        <span className="text-sm">{registration.mobileNumber}</span>
                       </div>
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Room:</span>
-                        <p>{registration.roomNumber}</p>
+                      <div className="flex items-center">
+                        <Home className="h-4 w-4 mr-2 text-purple-600" />
+                        <span className="text-sm">Room {registration.roomNumber}</span>
                       </div>
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground">Group:</span>
-                        <p>{registration.groupName}</p>
+                      <div className="flex items-center">
+                        <Users className="h-4 w-4 mr-2 text-orange-600" />
+                        <Badge variant="secondary">{registration.groupName}</Badge>
                       </div>
                     </div>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground block mb-2">Interests:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {registration.interests.map((interest, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {interest}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <span className="text-sm font-medium text-muted-foreground block mb-2">Software:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {registration.software.map((tool, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              {tool}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {registration.interests.slice(0, 3).map((interest) => (
+                        <Badge key={interest} variant="outline" className="text-xs">
+                          {interest}
+                        </Badge>
+                      ))}
+                      {registration.interests.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{registration.interests.length - 3} more
+                        </Badge>
+                      )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

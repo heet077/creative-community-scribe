@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Heart, Users, Palette, ChevronLeft, ChevronRight, User, Phone, Home, UserCheck } from 'lucide-react';
+import { Heart, Users, Palette, ChevronLeft, ChevronRight, User, Phone, Home, UserCheck, Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface RegistrationData {
@@ -143,6 +143,54 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit, on
     onSubmit(finalData);
     toast({ title: "Registration submitted successfully! 🎉" });
     onClose();
+  };
+
+  const renderProgressIndicator = () => {
+    return (
+      <div className="flex items-center justify-center mb-8 px-4">
+        {steps.map((step, index) => {
+          const isCompleted = index < currentStep;
+          const isCurrent = index === currentStep;
+          const isLast = index === steps.length - 1;
+          
+          return (
+            <div key={index} className="flex items-center">
+              {/* Step Circle */}
+              <div className="flex flex-col items-center">
+                <div 
+                  className={`
+                    w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300
+                    ${isCompleted 
+                      ? 'bg-green-500 border-green-500 text-white' 
+                      : isCurrent 
+                        ? 'bg-primary border-primary text-white animate-pulse' 
+                        : 'bg-gray-100 border-gray-300 text-gray-400'
+                    }
+                  `}
+                >
+                  {isCompleted ? (
+                    <Check className="h-6 w-6" />
+                  ) : (
+                    <step.icon className="h-6 w-6" />
+                  )}
+                </div>
+                <span className={`text-xs mt-2 font-medium ${isCurrent ? 'text-primary' : 'text-gray-500'}`}>
+                  {step.title}
+                </span>
+              </div>
+              
+              {/* Connecting Line */}
+              {!isLast && (
+                <div className={`
+                  h-0.5 w-16 mx-2 transition-all duration-300
+                  ${isCompleted ? 'bg-green-500' : 'bg-gray-300'}
+                `} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   const renderPreviousData = () => {
@@ -408,23 +456,15 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit, on
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto max-h-[85vh] overflow-hidden">
-      <CardHeader className="text-center bg-gradient-to-r from-purple-50 to-blue-50">
+    <Card className="w-full max-w-4xl mx-auto max-h-[90vh] overflow-hidden">
+      <CardHeader className="text-center bg-gradient-to-r from-purple-50 to-blue-50 pb-6">
         <div className="flex items-center justify-center mb-4">
           <Palette className="h-8 w-8 text-primary mr-2" />
           <CardTitle className="text-2xl">Creative Community Registration</CardTitle>
         </div>
-        <CardDescription className="text-lg">
-          Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}
-        </CardDescription>
         
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-3 mt-4">
-          <div 
-            className="bg-gradient-to-r from-purple-500 to-blue-500 h-3 rounded-full transition-all duration-500"
-            style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-          />
-        </div>
+        {/* Enhanced Progress Indicator */}
+        {renderProgressIndicator()}
       </CardHeader>
 
       <CardContent className="overflow-y-auto max-h-96 p-6">
